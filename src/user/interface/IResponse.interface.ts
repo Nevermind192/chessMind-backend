@@ -1,6 +1,6 @@
-interface IResponseError {
+export interface IResponseError {
   ok: false;
-  errors: Record<string, string>;
+  errors: Record<string, Record<string, string>>;
 }
 
 interface IResponseSuccess<T> {

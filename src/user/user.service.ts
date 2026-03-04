@@ -13,25 +13,30 @@ export class UserService {
     private readonly userRepository: Repository<UserEntity>,
   ) {}
 
-  async createUser(
-    createUserDto: CreateUserDto,
-  ): Promise<IResponse<IUserResponse>> {
+  async createUser(createUserDto: CreateUserDto): Promise<IResponse<IUserResponse>> {
     const existUser = await this.userRepository.findOneBy({
       email: createUserDto.email,
+    });
+    const existUserName = await this.userRepository.findOneBy({
+      nickname: createUserDto.nickname,
     });
     if (!!existUser) {
       return {
         ok: false,
-        errors: { emailExist: 'Пользователь с таким email уже существует' },
+        errors: { email: { exist: 'Пользователь с таким email уже существует' } },
+      };
+    }
+    if (!!existUserName) {
+      return {
+        ok: false,
+        errors: { nickname: { exist: 'Такое имя пользователя уже занято' } },
       };
     }
 
     const newUser = new UserEntity();
     Object.assign(newUser, createUserDto);
 
-    const userResponse = this.generateResponseUser(
-      await this.userRepository.save(newUser),
-    );
+    const userResponse = this.generateResponseUser(await this.userRepository.save(newUser));
     return { ok: true, data: userResponse };
   }
 
