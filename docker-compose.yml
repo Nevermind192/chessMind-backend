@@ -1,0 +1,201 @@
+version: "3"
+services:
+  postgres:
+    image: postgres:latest
+    container_name: postgres
+    environment:
+      POSTGRES_USER: postgres_user
+      POSTGRES_PASSWORD: postgres_password
+      POSTGRES_DB: chessmind
+      PGDATA: /var/lib/postgresql/data/pgdata
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./pgdata:/var/lib/postgresql/data/pgdata
+  # Mongo database container open template
+  mongodb:
+    image: mongo
+    container_name: chess_mongodb
+    restart: always
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=${MONGO_DB_ROOT_USERNAME}
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_DB_ROOT_PASSWORD}
+    volumes:
+      - ./mongodbdata:/data/db
+    ports:
+      - 27017:27017
+  # Redis database container open template
+  redis:
+    image: redis:latest
+    container_name: chess_redis
+    environment:
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+      - REDIS_USER=${REDIS_USER}
+      - REDIS_USER_PASSWORD=${REDIS_USER_PASSWORD}
+    ports:
+      - "6379:6379"
+    volumes:
+      - ./redisdata:/data
+    # deploy:
+    #   resources:
+    #     limits:
+    #       cpus: '0.50'
+    #       memory: 512M
+    #     reservations:
+    #       cpus: '0.25'
+    #       memory: 256M
+    command: >
+      sh -c '
+        mkdir -p /usr/local/etc/redis &&
+        echo "bind 0.0.0.0" > /usr/local/etc/redis/redis.conf &&
+        echo "requirepass $REDIS_PASSWORD" >> /usr/local/etc/redis/redis.conf &&
+        echo "appendonly yes" >> /usr/local/etc/redis/redis.conf &&
+        echo "appendfsync everysec" >> /usr/local/etc/redis/redis.conf &&
+        echo "user default on nopass ~* +@all" > /usr/local/etc/redis/users.acl &&
+        echo "user $REDIS_USER on >$REDIS_USER_PASSWORD ~* +@all" >> /usr/local/etc/redis/users.acl &&
+        redis-server /usr/local/etc/redis/redis.conf --aclfile /usr/local/etc/redis/users.acl
+      '
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "$REDIS_PASSWORD", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    restart: unless-stopped
+    tty: true
+    stdin_open: true
+
+  # Puzzles container
+  puzzles:
+    build:
+      context: ./puzzles # context is the current directory.
+      dockerfile: ./Dockerfile # dockerfile is in the api directory.
+
+    container_name: chess_puzzles
+    command: npm run development #${ENVIRONMENT} # final command after runned Dockerfile, set ENVIRONMENT to production or development in .env file.
+    volumes:
+      - ./puzzles:/home/node/app # sinhronize directory from container with the directory in the project.
+
+    environment:
+      - MONGO_DB_CONNECTION_STRING=mongodb://${MONGO_DB_ROOT_USERNAME}:${MONGO_DB_ROOT_PASSWORD}@mongodb:27017
+      - MONGO_DB_CONNECTION_DATABASE=chess
+      - REDIS_DB_CONNECTION_STRING=redis://${REDIS_USER}:${REDIS_USER_PASSWORD}@redis:6379
+      - ORIGIN_URL=${ORIGIN_URL}
+      - NODE_ENV=${ENVIRONMENT}
+      - PORT=3000
+
+    # wait for mongodb and redis to start.
+    depends_on:
+      - mongodb
+      - redis
+    ports:
+      - 9000:9000
+    restart: unless-stopped
+
+  # Chess container
+  chess:
+    build:
+      context: ./chess # context is the current directory.
+      dockerfile: ./Dockerfile # dockerfile is in the api directory.
+
+    container_name: chess_chess
+    command: npm run development #${ENVIRONMENT} # final command after runned Dockerfile, set ENVIRONMENT to production or development in .env file.
+    volumes:
+      - ./chess:/home/node/app # sinhronize directory from container with the directory in the project.
+
+    environment:
+      - MONGO_DB_CONNECTION_STRING=mongodb://${MONGO_DB_ROOT_USERNAME}:${MONGO_DB_ROOT_PASSWORD}@mongodb:27017
+      - MONGO_DB_CONNECTION_DATABASE=chess
+      - REDIS_DB_CONNECTION_STRING=redis://${REDIS_USER}:${REDIS_USER_PASSWORD}@redis:6379
+      - ORIGIN_URL=${ORIGIN_URL}
+      - NODE_ENV=${ENVIRONMENT}
+
+    # wait for mongodb and redis to start.
+    depends_on:
+      - mongodb
+      - redis
+    ports:
+      - 9001:9001
+    restart: unless-stopped
+
+  # Account container
+  account:
+    build:
+      context: ./account # context is the current directory.
+      dockerfile: ./Dockerfile # dockerfile is in the api directory.
+
+    container_name: chess_account
+    command: npm run development #${ENVIRONMENT} # final command after runned Dockerfile, set ENVIRONMENT to production or development in .env file.
+    # volumes:
+    # - ./account:/home/node/app # sinhronize directory from container with the directory in the project.
+
+    environment:
+      - MONGO_DB_CONNECTION_STRING=mongodb://${MONGO_DB_ROOT_USERNAME}:${MONGO_DB_ROOT_PASSWORD}@mongodb:27017
+      - MONGO_DB_CONNECTION_DATABASE=account
+      - REDIS_DB_CONNECTION_STRING=redis://${REDIS_USER}:${REDIS_USER_PASSWORD}@redis:6379
+      - ORIGIN_URL=${ORIGIN_URL}
+      - JWT_PRIVATE_KEY=${JWT_PRIVATE_KEY}
+      - NODE_ENV=${ENVIRONMENT}
+
+    depends_on:
+      - mongodb
+      - redis
+    ports:
+      - 9002:9002
+    restart: unless-stopped
+
+  # Account container
+  notification:
+    build:
+      context: ./notification # context is the current directory.
+      dockerfile: ./Dockerfile # dockerfile is in the api directory.
+
+    container_name: chess_notification
+    command: npm run development #${ENVIRONMENT} # final command after runned Dockerfile, set ENVIRONMENT to production or development in .env file.
+    volumes:
+      - ./notification:/home/node/app # sinhronize directory from container with the directory in the project.
+
+    environment:
+      - MONGO_DB_CONNECTION_STRING=mongodb://${MONGO_DB_ROOT_USERNAME}:${MONGO_DB_ROOT_PASSWORD}@mongodb:27017
+      - MONGO_DB_CONNECTION_DATABASE=chess
+      - REDIS_DB_CONNECTION_STRING=redis://${REDIS_USER}:${REDIS_USER_PASSWORD}@redis:6379
+      - ORIGIN_URL=${ORIGIN_URL}
+      - NODE_ENV=${ENVIRONMENT}
+
+    # wait for mongodb and redis to start.
+    depends_on:
+      - mongodb
+      - redis
+    ports:
+      - 9003:9003
+    restart: unless-stopped
+
+  # Hub container
+  hub:
+    build:
+      context: ./hub # context is the current directory.
+      dockerfile: ./Dockerfile # dockerfile is in the api directory.
+
+    container_name: chess_hub
+    command: npm run development #${ENVIRONMENT} # final command after runned Dockerfile, set ENVIRONMENT to production or development in .env file.
+    volumes:
+      - ./hub:/home/node/app # sinhronize directory from container with the directory in the project.
+
+    environment:
+      - MONGO_DB_CONNECTION_STRING=mongodb://${MONGO_DB_ROOT_USERNAME}:${MONGO_DB_ROOT_PASSWORD}@mongodb:27017
+      - MONGO_DB_CONNECTION_DATABASE=chess
+      - REDIS_DB_CONNECTION_STRING=redis://${REDIS_USER}:${REDIS_USER_PASSWORD}@redis:6379
+      - ORIGIN_URL=${ORIGIN_URL}
+      - JWT_PRIVATE_KEY=${JWT_PRIVATE_KEY}
+      - NODE_ENV=${ENVIRONMENT}
+
+    # wait for mongodb and redis to start.
+    depends_on:
+      - mongodb
+      - redis
+      # - chess
+      # - puzzles
+      # - account
+      # - notification
+    ports:
+      - 3000:3000
+    restart: unless-stopped
