@@ -3,9 +3,9 @@ export interface IResponseError {
   errors: Record<string, Record<string, string>>;
 }
 
-interface IResponseSuccess<T> {
+interface IResponseSuccess<T = void> {
   ok: true;
   data: T;
 }
 
-export type IResponse<T> = IResponseSuccess<T> | IResponseError;
+export type IResponse<T = void> = IResponseSuccess<T> | IResponseError;

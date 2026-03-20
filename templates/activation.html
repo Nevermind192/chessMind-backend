@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chessmind Activation</title>
+    <style>
+        /* Основной фон как в приложении */
+        body { 
+            background-color: #050112; 
+            margin: 0; 
+            padding: 0; 
+            font-family: 'Inter', 'Segoe UI', Roboto, sans-serif;
+        }
+        .wrapper {
+            width: 100%;
+            table-layout: fixed;
+            background-color: #050112;
+            padding-bottom: 40px;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #0d0a1f; /* Цвет карточки из интерфейса */
+            border: 1px solid #2d245d;
+            border-radius: 16px;
+            overflow: hidden;
+            margin-top: 50px;
+        }
+        .header {
+            padding: 40px 20px;
+            text-align: center;
+            background: linear-gradient(180deg, #0d0a1f 0%, #160f3d 100%);
+        }
+        /* Логотип в стиле Chessmind */
+        .logo {
+            font-family: 'Brush Script MT', cursive; /* Похож на твой рукописный шрифт */
+            font-size: 36px;
+            color: #ffffff;
+            text-shadow: 0 0 10px #5a38d4, 0 0 20px #5a38d4;
+            text-decoration: none;
+        }
+        .content {
+            padding: 40px;
+            text-align: center;
+            color: #e0e0e0;
+        }
+        h2 {
+            color: #ffffff;
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+        p {
+            font-size: 16px;
+            line-height: 1.6;
+            color: #b0b0cc;
+        }
+        /* Код с неоновым свечением */
+        .code-box {
+            margin: 35px 0;
+            padding: 20px;
+            background-color: #050112;
+            border: 2px solid #5a38d4;
+            border-radius: 12px;
+            display: inline-block;
+            box-shadow: 0 0 15px rgba(90, 56, 212, 0.4);
+        }
+        .code {
+            font-family: 'Monaco', 'Consolas', monospace;
+            font-size: 38px;
+            font-weight: bold;
+            letter-spacing: 8px;
+            color: #ffffff;
+            text-shadow: 0 0 8px rgba(255, 255, 255, 0.5);
+        }
+        .footer {
+            padding: 30px;
+            text-align: center;
+            color: #5d5d7e;
+            font-size: 12px;
+            background-color: #0a0817;
+        }
+        .icon {
+            margin-bottom: 15px;
+            width: 50px;
+            filter: drop-shadow(0 0 5px #5a38d4);
+        }
+    </style>
+</head>
+<body>
+    <div class="wrapper">
+        <div class="container">
+            <div class="header">
+                <div class="logo">Chessmind</div>
+            </div>
+            
+            <div class="content">
+                <div style="font-size: 40px; color: #5a38d4; margin-bottom: 10px;">♞</div>
+                <h2>Инициализация нового гроссмейстера</h2>
+                <p>Добро пожаловать в систему, <strong>{{username}}</strong>. <br> Твой профиль почти готов к первой партии. Введи этот код в приложении:</p>
+                
+                <div class="code-box">
+                    <span class="code">{{code}}</span>
+                </div>
+
+                <p style="font-size: 13px; color: #5d5d7e;">Код истекает через 15 минут.<br>Система ожидает твоего хода.</p>
+            </div>
+            
+            <div class="footer">
+                &copy; 2026 Chessmind. Анализируй. Решай. Побеждай.<br>
+                Письмо отправлено автоматически для защиты твоего аккаунта.
+            </div>
+        </div>
+    </div>
+</body>
+</html>
