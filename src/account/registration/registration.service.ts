@@ -9,6 +9,7 @@ import { sign } from 'jsonwebtoken';
 import { Tokens } from 'src/shared/enums/tokens';
 import type { IMailSender } from 'src/shared/mailSender/IMailSender.interface';
 import { OTP_TYPE, OtpService } from 'src/shared/redis/services/otp.service';
+import { ConfirmUserDto } from './dto/confirmUser.dto';
 
 @Injectable()
 export class RegistrationService {
@@ -21,6 +22,15 @@ export class RegistrationService {
 
     private readonly _otpService: OtpService,
   ) {}
+
+  /**
+   * Проверяет, занят ли никнейм.
+   * @param nickname - Никнейм для проверки.
+   * @returns true, если занят, false, если свободен.
+   */
+  async isNicknameTaken(nickname: string): Promise<boolean> {
+    return await this.userRepository.existsBy({ nickname });
+  }
 
   /**
    * Регистрирует нового пользователя, создает OTP-код и отправляет письмо с подтверждением.
@@ -74,12 +84,12 @@ export class RegistrationService {
    * @param code - Код верификации, полученный из письма.
    * @returns Данные пользователя с JWT-токеном или объект с ошибками.
    */
-  async confirmUser(email: string, code: string): Promise<IResponse<IUserResponse>> {
-    if (this._otpService.check(OTP_TYPE.RESET, email, code)) {
-      this._otpService.delete(OTP_TYPE.CONFIRM, email);
+  async confirmUser(confirmUserDto: ConfirmUserDto): Promise<IResponse<IUserResponse>> {
+    if (this._otpService.check(OTP_TYPE.CONFIRM, confirmUserDto.email, confirmUserDto.code)) {
+      this._otpService.delete(OTP_TYPE.CONFIRM, confirmUserDto.email);
 
       const newUser = await this.userRepository.findOneBy({
-        email: email,
+        email: confirmUserDto.email,
       });
       if (!!newUser) {
         const userResponse = this.generateResponseUserWithToken(newUser);

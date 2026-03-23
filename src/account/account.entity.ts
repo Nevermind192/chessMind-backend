@@ -1,26 +1,26 @@
 import { Entity, Column, PrimaryGeneratedColumn, BeforeInsert, BeforeUpdate } from 'typeorm';
-import { genSalt, hash } from "bcrypt"
+import { genSalt, hash } from 'bcrypt';
 
-@Entity({name: "users"})
+@Entity({ name: 'users' })
 export class UserEntity {
-    @PrimaryGeneratedColumn('increment')
-    id: number;
+  @PrimaryGeneratedColumn('increment')
+  id: number;
 
-    @Column()
-    nickname: string;
+  @Column({ unique: true })
+  nickname: string;
 
-    @Column()
-    email: string;
+  @Column({ unique: true })
+  email: string;
 
-    @Column()
-    password: string;
+  @Column()
+  password: string;
 
-    @BeforeInsert()
-    @BeforeUpdate()
-    async hashPassword() {
-        if(this.password) {
-            const salt = await genSalt(10);
-            this.password = await hash(this.password, salt);
-        }
+  @BeforeInsert()
+  @BeforeUpdate()
+  async hashPassword() {
+    if (this.password) {
+      const salt = await genSalt(10);
+      this.password = await hash(this.password, salt);
     }
+  }
 }
