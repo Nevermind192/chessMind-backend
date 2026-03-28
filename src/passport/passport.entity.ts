@@ -15,8 +15,10 @@ export class UserEntity {
   @Column()
   password: string;
 
+  @Column({ default: false })
+  is_verified: boolean;
+
   @BeforeInsert()
-  @BeforeUpdate()
   async hashPassword() {
     if (this.password) {
       const salt = await genSalt(10);
